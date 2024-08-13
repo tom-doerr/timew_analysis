@@ -41,7 +41,7 @@ def get_color(tag):
 def format_time_blocks(time_blocks):
     """Format time blocks for display with a visual representation."""
     output = []
-    hours = {i: [(" ", None) for _ in range(240)] for i in range(24)}
+    hours = {i: [(" ", None) for _ in range(60)] for i in range(24)}
     colors = {}
 
     for start, end, tags in time_blocks:
@@ -52,15 +52,15 @@ def format_time_blocks(time_blocks):
         start_hour, start_minute = start.hour, start.minute
         end_hour, end_minute = end.hour, end.minute
 
-        start_index = start_hour * 240 + start_minute * 4
-        end_index = end_hour * 240 + end_minute * 4
+        start_index = start_hour * 60 + start_minute
+        end_index = end_hour * 60 + end_minute
 
         for i in range(start_index, end_index):
-            hour = i // 240
-            minute = (i % 240) // 4
-            hours[hour][i % 240] = (tag[0], bg_color)
+            hour = i // 60
+            minute = i % 60
+            hours[hour][minute] = ("█", bg_color)
 
-    output.append("┌" + "─" * 242 + "┐")
+    output.append("┌" + "─" * 62 + "┐")
     for hour in range(24):
         line = f"│{hour:02d}:00 "
         for char, bg_color in hours[hour]:
@@ -70,12 +70,12 @@ def format_time_blocks(time_blocks):
                 line += char
         line += "│"
         output.append(line)
-    output.append("└" + "─" * 242 + "┘")
+    output.append("└" + "─" * 62 + "┘")
 
     # Add legend
     output.append("\nLegend:")
     for tag, bg_color in colors.items():
-        output.append(f"{bg_color}{tag[0]*5}\033[0m {tag}")
+        output.append(f"{bg_color}█████\033[0m {tag}")
 
     # Add timestamp
     output.append(f"\nReport generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
