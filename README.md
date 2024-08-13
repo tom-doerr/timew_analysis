@@ -38,18 +38,6 @@ The script generates a 24-hour timeline with colored blocks representing differe
 - A legend explaining the color coding
 - A timestamp indicating when the report was generated
 
-## License
-
-[Include your license information here]
-
-## Contributing
-
-[Include information about how others can contribute to your project]
-
-## Author
-
-[Your Name]
-
 ## Acknowledgments
 
 - TimeWarrior project (https://timewarrior.net/)
