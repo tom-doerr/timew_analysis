@@ -2,7 +2,7 @@
 
 import subprocess
 import json
-from datetime import datetime, date
+from datetime import datetime, date, timezone, timedelta
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
@@ -16,8 +16,8 @@ def parse_timewarrior_data(data):
     today = date.today()
     time_blocks = []
     for entry in data:
-        start = datetime.fromisoformat(entry['start'])
-        end = datetime.fromisoformat(entry['end']) if 'end' in entry else datetime.now()
+        start = datetime.strptime(entry['start'], "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc).astimezone()
+        end = datetime.strptime(entry['end'], "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc).astimezone() if 'end' in entry else datetime.now()
         if start.date() == today:
             time_blocks.append((start, end, entry.get('tags', [])))
     return time_blocks
