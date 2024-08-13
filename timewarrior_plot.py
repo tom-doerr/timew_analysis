@@ -29,34 +29,41 @@ def get_color(tag):
 def format_time_blocks(time_blocks):
     """Format time blocks for display with a visual representation."""
     output = []
-    hours = {i: [" " * 60 for _ in range(60)] for i in range(24)}
+    hours = {i: [(" ", None) for _ in range(240)] for i in range(24)}
     colors = {}
 
     for start, end, tags in time_blocks:
         color = get_color(tags[0] if tags else "default")
         colors[tags[0] if tags else "default"] = color
+        tag = tags[0] if tags else "default"
         
         start_hour, start_minute = start.hour, start.minute
         end_hour, end_minute = end.hour, end.minute
 
         if start_hour == end_hour:
-            for i in range(start_minute, end_minute):
-                hours[start_hour][i] = color + "█" + "\033[0m"
+            for i in range(start_minute * 4, end_minute * 4):
+                hours[start_hour][i] = (tag[i % len(tag)], color)
         else:
-            for i in range(start_minute, 60):
-                hours[start_hour][i] = color + "█" + "\033[0m"
+            for i in range(start_minute * 4, 240):
+                hours[start_hour][i] = (tag[i % len(tag)], color)
             for hour in range(start_hour + 1, end_hour):
-                hours[hour] = [color + "█" + "\033[0m"] * 60
-            for i in range(end_minute):
-                hours[end_hour][i] = color + "█" + "\033[0m"
+                hours[hour] = [(tag[i % len(tag)], color) for i in range(240)]
+            for i in range(end_minute * 4):
+                hours[end_hour][i] = (tag[i % len(tag)], color)
 
     for hour in range(24):
-        output.append(f"{hour:02d}:00 {''.join(hours[hour])}")
+        line = f"{hour:02d}:00 "
+        for char, color in hours[hour]:
+            if color:
+                line += f"{color}{char}\033[0m"
+            else:
+                line += char
+        output.append(line)
 
     # Add legend
     output.append("\nLegend:")
     for tag, color in colors.items():
-        output.append(f"{color}█████{tag}\033[0m")
+        output.append(f"{color}{tag}\033[0m")
 
     return "\n".join(output)
 
