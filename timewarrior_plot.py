@@ -36,7 +36,7 @@ def get_color(tag):
 def format_time_blocks(time_blocks):
     """Format time blocks for display with a visual representation."""
     output = []
-    hours = {i: [(" ", None) for _ in range(240)] for i in range(24)}
+    hours = {i: [(" ", None, None) for _ in range(240)] for i in range(24)}
     colors = {}
 
     for start, end, tags in time_blocks:
