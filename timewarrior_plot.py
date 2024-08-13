@@ -6,6 +6,12 @@ from datetime import datetime, date, timezone, timedelta
 import random
 import sys
 
+def get_opposite_color(color):
+    """Calculate the opposite color for better readability."""
+    color_num = int(color.split(';')[-1][:-1])
+    opposite_color = 15 if color_num < 128 else 0  # White (15) for dark colors, Black (0) for light colors
+    return f"\033[38;5;{opposite_color}m"
+
 def get_timewarrior_data():
     """Execute TimeWarrior export command and return the output."""
     result = subprocess.run(['timew', 'export'], capture_output=True, text=True)
@@ -34,8 +40,9 @@ def format_time_blocks(time_blocks):
     colors = {}
 
     for start, end, tags in time_blocks:
-        color = get_color(tags[0] if tags else "default")
-        colors[tags[0] if tags else "default"] = color
+        bg_color = get_color(tags[0] if tags else "default")
+        text_color = get_opposite_color(bg_color)
+        colors[tags[0] if tags else "default"] = (bg_color, text_color)
         tag = tags[0] if tags else "default"
         
         start_hour, start_minute = start.hour, start.minute
@@ -43,21 +50,21 @@ def format_time_blocks(time_blocks):
 
         if start_hour == end_hour:
             for i in range(start_minute * 4, end_minute * 4):
-                hours[start_hour][i] = ("█", color)
+                hours[start_hour][i] = ("█", bg_color, text_color)
         else:
             for i in range(start_minute * 4, 240):
-                hours[start_hour][i] = ("█", color)
+                hours[start_hour][i] = ("█", bg_color, text_color)
             for hour in range(start_hour + 1, end_hour):
-                hours[hour] = [("█", color) for _ in range(240)]
+                hours[hour] = [("█", bg_color, text_color) for _ in range(240)]
             for i in range(end_minute * 4):
-                hours[end_hour][i] = ("█", color)
+                hours[end_hour][i] = ("█", bg_color, text_color)
 
     output.append("┌" + "─" * 242 + "┐")
     for hour in range(24):
         line = f"│{hour:02d}:00 "
-        for char, color in hours[hour]:
-            if color:
-                line += f"{color}{char}\033[0m"
+        for char, bg_color, text_color in hours[hour]:
+            if bg_color:
+                line += f"{bg_color}{text_color}{char}\033[0m"
             else:
                 line += char
         line += "│"
@@ -66,8 +73,8 @@ def format_time_blocks(time_blocks):
 
     # Add legend
     output.append("\nLegend:")
-    for tag, color in colors.items():
-        output.append(f"{color}█████ {tag}\033[0m")
+    for tag, (bg_color, text_color) in colors.items():
+        output.append(f"{bg_color}{text_color}█████ {tag}\033[0m")
 
     # Add timestamp
     output.append(f"\nReport generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
