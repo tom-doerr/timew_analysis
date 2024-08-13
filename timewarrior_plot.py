@@ -9,8 +9,7 @@ import sys
 def get_opposite_color(color):
     """Calculate the opposite color for better readability."""
     color_num = int(color.split(';')[-1][:-1])
-    opposite_color = 15 if color_num < 128 else 0  # White (15) for dark colors, Black (0) for light colors
-    return f"\033[38;5;{opposite_color}m"
+    return "\033[38;5;0m" if color_num > 100 else "\033[38;5;15m"  # Black for bright colors, White for dark colors
 
 def get_timewarrior_data():
     """Execute TimeWarrior export command and return the output."""
@@ -50,14 +49,14 @@ def format_time_blocks(time_blocks):
 
         if start_hour == end_hour:
             for i in range(start_minute * 4, end_minute * 4):
-                hours[start_hour][i] = ("█", bg_color, text_color)
+                hours[start_hour][i] = (tag[0], bg_color, text_color)
         else:
             for i in range(start_minute * 4, 240):
-                hours[start_hour][i] = ("█", bg_color, text_color)
+                hours[start_hour][i] = (tag[0], bg_color, text_color)
             for hour in range(start_hour + 1, end_hour):
-                hours[hour] = [("█", bg_color, text_color) for _ in range(240)]
+                hours[hour] = [(tag[0], bg_color, text_color) for _ in range(240)]
             for i in range(end_minute * 4):
-                hours[end_hour][i] = ("█", bg_color, text_color)
+                hours[end_hour][i] = (tag[0], bg_color, text_color)
 
     output.append("┌" + "─" * 242 + "┐")
     for hour in range(24):
@@ -74,7 +73,7 @@ def format_time_blocks(time_blocks):
     # Add legend
     output.append("\nLegend:")
     for tag, (bg_color, text_color) in colors.items():
-        output.append(f"{bg_color}{text_color}█████ {tag}\033[0m")
+        output.append(f"{bg_color}{text_color}{tag[0]*5} {tag}\033[0m")
 
     # Add timestamp
     output.append(f"\nReport generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
