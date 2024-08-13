@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import subprocess
 import json
 from datetime import datetime, date
