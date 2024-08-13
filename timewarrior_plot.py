@@ -21,17 +21,25 @@ def parse_timewarrior_data(data):
     return time_blocks
 
 def format_time_blocks(time_blocks):
-    """Format time blocks for display."""
+    """Format time blocks for display with a visual representation."""
     output = []
+    max_duration = max((end - start).total_seconds() for start, end, _ in time_blocks)
+    
     for i, (start, end, tags) in enumerate(time_blocks, 1):
         duration = end - start
         hours, remainder = divmod(duration.total_seconds(), 3600)
         minutes, _ = divmod(remainder, 60)
+        
+        # Calculate the bar length proportional to the duration
+        bar_length = int((duration.total_seconds() / max_duration) * 40)
+        bar = '█' * bar_length
+        
         output.append(f"Block {i}:")
         output.append(f"  Start: {start.strftime('%H:%M:%S')}")
         output.append(f"  End: {end.strftime('%H:%M:%S')}")
         output.append(f"  Duration: {int(hours):02d}:{int(minutes):02d}")
         output.append(f"  Tags: {', '.join(tags)}")
+        output.append(f"  {bar} {duration}")
         output.append("")
     return "\n".join(output)
 
