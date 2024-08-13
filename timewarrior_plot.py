@@ -3,6 +3,7 @@
 import subprocess
 import json
 from datetime import datetime, date, timezone, timedelta
+import random
 
 def get_timewarrior_data():
     """Execute TimeWarrior export command and return the output."""
@@ -20,27 +21,43 @@ def parse_timewarrior_data(data):
             time_blocks.append((start, end, entry.get('tags', [])))
     return time_blocks
 
+def get_color(tag):
+    """Generate a consistent color for a given tag."""
+    random.seed(tag)
+    return f"\033[38;5;{random.randint(1, 255)}m"
+
 def format_time_blocks(time_blocks):
     """Format time blocks for display with a visual representation."""
     output = []
-    max_duration = max((end - start).total_seconds() for start, end, _ in time_blocks)
-    
-    for i, (start, end, tags) in enumerate(time_blocks, 1):
-        duration = end - start
-        hours, remainder = divmod(duration.total_seconds(), 3600)
-        minutes, _ = divmod(remainder, 60)
+    hours = {i: [" " * 60 for _ in range(60)] for i in range(24)}
+    colors = {}
+
+    for start, end, tags in time_blocks:
+        color = get_color(tags[0] if tags else "default")
+        colors[tags[0] if tags else "default"] = color
         
-        # Calculate the bar length proportional to the duration
-        bar_length = int((duration.total_seconds() / max_duration) * 40)
-        bar = '█' * bar_length
-        
-        output.append(f"Block {i}:")
-        output.append(f"  Start: {start.strftime('%H:%M:%S')}")
-        output.append(f"  End: {end.strftime('%H:%M:%S')}")
-        output.append(f"  Duration: {int(hours):02d}:{int(minutes):02d}")
-        output.append(f"  Tags: {', '.join(tags)}")
-        output.append(f"  {bar} {duration}")
-        output.append("")
+        start_hour, start_minute = start.hour, start.minute
+        end_hour, end_minute = end.hour, end.minute
+
+        if start_hour == end_hour:
+            for i in range(start_minute, end_minute):
+                hours[start_hour][i] = color + "█" + "\033[0m"
+        else:
+            for i in range(start_minute, 60):
+                hours[start_hour][i] = color + "█" + "\033[0m"
+            for hour in range(start_hour + 1, end_hour):
+                hours[hour] = [color + "█" + "\033[0m"] * 60
+            for i in range(end_minute):
+                hours[end_hour][i] = color + "█" + "\033[0m"
+
+    for hour in range(24):
+        output.append(f"{hour:02d}:00 {''.join(hours[hour])}")
+
+    # Add legend
+    output.append("\nLegend:")
+    for tag, color in colors.items():
+        output.append(f"{color}█████{tag}\033[0m")
+
     return "\n".join(output)
 
 def main():
