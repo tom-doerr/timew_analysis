@@ -4,6 +4,7 @@ import subprocess
 import json
 from datetime import datetime, date, timezone, timedelta
 import random
+import sys
 
 def get_timewarrior_data():
     """Execute TimeWarrior export command and return the output."""
@@ -42,28 +43,34 @@ def format_time_blocks(time_blocks):
 
         if start_hour == end_hour:
             for i in range(start_minute * 4, end_minute * 4):
-                hours[start_hour][i] = (tag[i % len(tag)], color)
+                hours[start_hour][i] = ("█", color)
         else:
             for i in range(start_minute * 4, 240):
-                hours[start_hour][i] = (tag[i % len(tag)], color)
+                hours[start_hour][i] = ("█", color)
             for hour in range(start_hour + 1, end_hour):
-                hours[hour] = [(tag[i % len(tag)], color) for i in range(240)]
+                hours[hour] = [("█", color) for _ in range(240)]
             for i in range(end_minute * 4):
-                hours[end_hour][i] = (tag[i % len(tag)], color)
+                hours[end_hour][i] = ("█", color)
 
+    output.append("┌" + "─" * 242 + "┐")
     for hour in range(24):
-        line = f"{hour:02d}:00 "
+        line = f"│{hour:02d}:00 "
         for char, color in hours[hour]:
             if color:
                 line += f"{color}{char}\033[0m"
             else:
                 line += char
+        line += "│"
         output.append(line)
+    output.append("└" + "─" * 242 + "┘")
 
     # Add legend
     output.append("\nLegend:")
     for tag, color in colors.items():
-        output.append(f"{color}{tag} \033[0m")
+        output.append(f"{color}█████ {tag}\033[0m")
+
+    # Add timestamp
+    output.append(f"\nReport generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
     return "\n".join(output)
 
@@ -75,3 +82,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    sys.exit(0)
