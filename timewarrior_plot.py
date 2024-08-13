@@ -63,7 +63,7 @@ def format_time_blocks(time_blocks):
     # Add legend
     output.append("\nLegend:")
     for tag, color in colors.items():
-        output.append(f"{color}{tag}\033[0m")
+        output.append(f"{color}{tag} \033[0m")
 
     return "\n".join(output)
 
