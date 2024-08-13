@@ -41,7 +41,7 @@ def get_color(tag):
 def format_time_blocks(time_blocks):
     """Format time blocks for display with a visual representation."""
     output = []
-    hours = {i: [(" ", None, None) for _ in range(120)] for i in range(24)}  # Increased to 120 for 30-minute blocks
+    hours = {i: [(" ", None, None) for _ in range(120)] for i in range(24)}  # 120 for 30-minute blocks
     colors = {}
 
     for start, end, tags in time_blocks:
@@ -58,25 +58,30 @@ def format_time_blocks(time_blocks):
         for i in range(start_index, end_index):
             hour = i // 120
             minute = (i % 120) // 2
-            char = tag[0].upper() if i % 2 == 0 else "█"
-            hours[hour][i % 120] = (char, bg_color, tag)
+            hours[hour][i % 120] = ("█", bg_color, tag)
 
     output.append("┌" + "─" * 122 + "┐")
     for hour in range(24):
-        line = f"│{hour:02d}:00 "
+        text_line = f"│{hour:02d}:00 "
+        block_line = "│     "
         for char, bg_color, tag in hours[hour]:
             if bg_color:
-                line += f"{bg_color}{char}\033[0m"
+                text_line += f"{bg_color}{tag[0].upper() if tag != 'default' else ' '}\033[0m"
+                block_line += f"{bg_color}{char}\033[0m"
             else:
-                line += char
-        line += "│"
-        output.append(line)
+                text_line += " "
+                block_line += " "
+        text_line += "│"
+        block_line += "│"
+        output.append(text_line)
+        output.append(block_line)
     output.append("└" + "─" * 122 + "┘")
 
     # Add legend
     output.append("\nLegend:")
     for tag, bg_color in colors.items():
-        output.append(f"{bg_color}{tag[0].upper()}█{tag[0].upper()}█{tag[0].upper()}\033[0m {tag}")
+        output.append(f"{bg_color}{tag[0].upper()}  {tag[0].upper()}  {tag[0].upper()}\033[0m {tag}")
+        output.append(f"{bg_color}█████\033[0m")
 
     # Add timestamp
     output.append(f"\nReport generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
