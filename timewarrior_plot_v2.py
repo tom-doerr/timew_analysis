@@ -43,6 +43,7 @@ def format_time_blocks(time_blocks):
     output = []
     hours = {i: [(" ", None, None) for _ in range(120)] for i in range(24)}  # 120 for 30-minute blocks
     colors = {}
+    tag_positions = {}
 
     for start, end, tags in time_blocks:
         bg_color = get_color(tags[0] if tags else "default")
@@ -59,15 +60,24 @@ def format_time_blocks(time_blocks):
             hour = i // 120
             minute = (i % 120) // 2
             hours[hour][i % 120] = ("█", bg_color, tag)
+            
+        # Store the middle position of each tag for text placement
+        middle_index = (start_index + end_index) // 2
+        tag_positions[tag] = middle_index
 
     output.append("┌" + "─" * 122 + "┐")
     for hour in range(24):
         text_line = f"│{hour:02d}:00 "
         block_line = "│     "
-        for char, bg_color, tag in hours[hour]:
+        for i, (char, bg_color, tag) in enumerate(hours[hour]):
             if bg_color:
-                text_line += f"{bg_color}{tag[0].upper() if tag != 'default' else ' '}\033[0m"
                 block_line += f"{bg_color}{char}\033[0m"
+                if tag_positions.get(tag) == hour * 120 + i:
+                    text_to_add = tag[:10].center(10)  # Limit tag to 10 characters and center it
+                    text_line += f"{bg_color}{text_to_add}\033[0m"
+                    i += 9  # Skip the next 9 positions
+                else:
+                    text_line += " "
             else:
                 text_line += " "
                 block_line += " "
@@ -80,8 +90,8 @@ def format_time_blocks(time_blocks):
     # Add legend
     output.append("\nLegend:")
     for tag, bg_color in colors.items():
-        output.append(f"{bg_color}{tag[0].upper()}  {tag[0].upper()}  {tag[0].upper()}\033[0m {tag}")
-        output.append(f"{bg_color}█████\033[0m")
+        output.append(f"{bg_color}{tag[:10].center(10)}\033[0m {tag}")
+        output.append(f"{bg_color}{'█' * 10}\033[0m")
 
     # Add timestamp
     output.append(f"\nReport generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
