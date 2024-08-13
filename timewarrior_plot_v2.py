@@ -43,27 +43,23 @@ def format_time_blocks(time_blocks):
     output = []
     hours = {i: [(" ", None, None) for _ in range(120)] for i in range(24)}  # 120 for 30-minute blocks
     colors = {}
-    tag_positions = {}
+    tag_blocks = {}
 
     for start, end, tags in time_blocks:
         bg_color = get_color(tags[0] if tags else "default")
         colors[tags[0] if tags else "default"] = bg_color
         tag = tags[0] if tags else "default"
         
-        start_hour, start_minute = start.hour, start.minute
-        end_hour, end_minute = end.hour, end.minute
-
-        start_index = start_hour * 120 + start_minute * 2
-        end_index = end_hour * 120 + end_minute * 2
+        start_index = start.hour * 120 + start.minute * 2
+        end_index = end.hour * 120 + end.minute * 2
 
         for i in range(start_index, end_index):
             hour = i // 120
-            minute = (i % 120) // 2
             hours[hour][i % 120] = ("█", bg_color, tag)
-            
-        # Store the middle position of each tag for text placement
-        middle_index = (start_index + end_index) // 2
-        tag_positions[tag] = middle_index
+        
+        if tag not in tag_blocks:
+            tag_blocks[tag] = []
+        tag_blocks[tag].append((start_index, end_index))
 
     output.append("┌" + "─" * 122 + "┐")
     for hour in range(24):
@@ -82,10 +78,13 @@ def format_time_blocks(time_blocks):
                 # Add the block to the block line
                 block_line += f"{bg_color}{'█' * block_width}\033[0m"
                 
-                # Add the tag to the text line if this is where it should be placed
-                if tag_positions.get(tag) in range(hour * 120 + i, hour * 120 + end):
-                    text_to_add = tag[:block_width].center(block_width)
-                    text_line += f"{bg_color}{text_to_add}\033[0m"
+                # Check if we should add the tag text
+                hour_start = hour * 120
+                for start, end in tag_blocks[tag]:
+                    if start <= hour_start + i < end:
+                        text_to_add = tag[:block_width].center(block_width)
+                        text_line += f"{bg_color}{text_to_add}\033[0m"
+                        break
                 else:
                     text_line += " " * block_width
                 
