@@ -61,7 +61,8 @@ def format_time_blocks(time_blocks):
             tag_blocks[tag] = []
         tag_blocks[tag].append((start_index, end_index))
 
-    output.append("┌" + "─" * 121 + "┐")
+    total_width = 126  # 24 hours * 5 characters per hour + 6 for borders
+    output.append("┌" + "─" * (total_width - 2) + "┐")
     for hour in range(24):
         text_line = f"│{hour:02d}:00"
         block_line = "│    "
@@ -94,11 +95,11 @@ def format_time_blocks(time_blocks):
                 block_line += " "
                 i += 1
         
-        text_line += "│"
-        block_line += "│"
+        text_line = text_line.ljust(total_width - 1) + "│"
+        block_line = block_line.ljust(total_width - 1) + "│"
         output.append(text_line)
         output.append(block_line)
-    output.append("└" + "─" * 121 + "┘")
+    output.append("└" + "─" * (total_width - 2) + "┘")
 
     # Add legend
     output.append("\nLegend:")
