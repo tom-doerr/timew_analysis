@@ -6,6 +6,25 @@ from datetime import datetime, date, timezone, timedelta
 import random
 import sys
 
+# Define tag priority lists
+LOW_PRIORITY_TAGS = ['obj', 'obj2', 'obj3', 'prof', 'ai', 'ai3']
+HIGH_PRIORITY_TAGS = ['break']
+
+def prioritize_tags(tags):
+    """Prioritize tags based on predefined lists."""
+    for tag in HIGH_PRIORITY_TAGS:
+        if tag in tags:
+            return [tag]
+    
+    for tag in tags:
+        if tag not in LOW_PRIORITY_TAGS:
+            return [tag]
+    
+    for tag in reversed(LOW_PRIORITY_TAGS):
+        if tag in tags:
+            return [tag]
+    
+    return tags  # If no prioritization applies, return all tags
 
 def get_timewarrior_data():
     """Execute TimeWarrior export command and return the output."""
@@ -30,7 +49,8 @@ def parse_timewarrior_data(data):
             end = datetime.combine(today, datetime.max.time()).astimezone()
         
         if start.date() == today:
-            time_blocks.append((start, end, entry.get('tags', [])))
+            prioritized_tags = prioritize_tags(entry.get('tags', []))
+            time_blocks.append((start, end, prioritized_tags))
     return time_blocks
 
 def get_color(tag):
