@@ -69,18 +69,32 @@ def format_time_blocks(time_blocks):
     for hour in range(24):
         text_line = f"│{hour:02d}:00 "
         block_line = "│     "
-        for i, (char, bg_color, tag) in enumerate(hours[hour]):
+        i = 0
+        while i < 120:
+            char, bg_color, tag = hours[hour][i]
             if bg_color:
-                block_line += f"{bg_color}{char}\033[0m"
-                if tag_positions.get(tag) == hour * 120 + i:
-                    text_to_add = tag[:10].center(10)  # Limit tag to 10 characters and center it
+                # Find the end of this block
+                end = i
+                while end < 120 and hours[hour][end][1] == bg_color:
+                    end += 1
+                block_width = end - i
+                
+                # Add the block to the block line
+                block_line += f"{bg_color}{'█' * block_width}\033[0m"
+                
+                # Add the tag to the text line if this is where it should be placed
+                if tag_positions.get(tag) in range(hour * 120 + i, hour * 120 + end):
+                    text_to_add = tag[:block_width].center(block_width)
                     text_line += f"{bg_color}{text_to_add}\033[0m"
-                    i += 9  # Skip the next 9 positions
                 else:
-                    text_line += " "
+                    text_line += " " * block_width
+                
+                i = end
             else:
                 text_line += " "
                 block_line += " "
+                i += 1
+        
         text_line += "│"
         block_line += "│"
         output.append(text_line)
@@ -90,7 +104,7 @@ def format_time_blocks(time_blocks):
     # Add legend
     output.append("\nLegend:")
     for tag, bg_color in colors.items():
-        output.append(f"{bg_color}{tag[:10].center(10)}\033[0m {tag}")
+        output.append(f"{bg_color}{tag.center(10)}\033[0m {tag}")
         output.append(f"{bg_color}{'█' * 10}\033[0m")
 
     # Add timestamp
