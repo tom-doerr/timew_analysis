@@ -6,10 +6,6 @@ from datetime import datetime, date, timezone, timedelta
 import random
 import sys
 
-def get_opposite_color(color):
-    """Calculate the opposite color for better readability."""
-    color_num = int(color.split(';')[-1][:-1])
-    return "\033[38;5;0m" if color_num > 100 else "\033[38;5;15m"  # Black for bright colors, White for dark colors
 
 def get_timewarrior_data():
     """Execute TimeWarrior export command and return the output."""
@@ -22,7 +18,17 @@ def parse_timewarrior_data(data):
     time_blocks = []
     for entry in data:
         start = datetime.strptime(entry['start'], "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc).astimezone()
-        end = datetime.strptime(entry['end'], "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc).astimezone() if 'end' in entry else datetime.now(timezone.utc).astimezone()
+        if 'end' in entry:
+            end = datetime.strptime(entry['end'], "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc).astimezone()
+        else:
+            end = datetime.now(timezone.utc).astimezone()
+        
+        # Handle multi-day entries
+        if start.date() < today and end.date() >= today:
+            start = datetime.combine(today, datetime.min.time()).astimezone()
+        elif end.date() > today:
+            end = datetime.combine(today, datetime.max.time()).astimezone()
+        
         if start.date() == today:
             time_blocks.append((start, end, entry.get('tags', [])))
     return time_blocks
@@ -46,16 +52,13 @@ def format_time_blocks(time_blocks):
         start_hour, start_minute = start.hour, start.minute
         end_hour, end_minute = end.hour, end.minute
 
-        if start_hour == end_hour:
-            for i in range(start_minute * 4, end_minute * 4):
-                hours[start_hour][i] = (tag[0], bg_color)
-        else:
-            for i in range(start_minute * 4, 240):
-                hours[start_hour][i] = (tag[0], bg_color)
-            for hour in range(start_hour + 1, end_hour):
-                hours[hour] = [(tag[0], bg_color) for _ in range(240)]
-            for i in range(end_minute * 4):
-                hours[end_hour][i] = (tag[0], bg_color)
+        start_index = start_hour * 240 + start_minute * 4
+        end_index = end_hour * 240 + end_minute * 4
+
+        for i in range(start_index, end_index):
+            hour = i // 240
+            minute = (i % 240) // 4
+            hours[hour][i % 240] = (tag[0], bg_color)
 
     output.append("┌" + "─" * 242 + "┐")
     for hour in range(24):
