@@ -3,8 +3,6 @@
 import subprocess
 import json
 from datetime import datetime, date, timezone, timedelta
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 
 def get_timewarrior_data():
     """Execute TimeWarrior export command and return the output."""
@@ -17,37 +15,31 @@ def parse_timewarrior_data(data):
     time_blocks = []
     for entry in data:
         start = datetime.strptime(entry['start'], "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc).astimezone()
-        end = datetime.strptime(entry['end'], "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc).astimezone() if 'end' in entry else datetime.now()
+        end = datetime.strptime(entry['end'], "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc).astimezone() if 'end' in entry else datetime.now(timezone.utc).astimezone()
         if start.date() == today:
             time_blocks.append((start, end, entry.get('tags', [])))
     return time_blocks
 
-def plot_time_blocks(time_blocks):
-    """Plot time blocks for today."""
-    fig, ax = plt.subplots(figsize=(12, 6))
-    
-    for i, (start, end, tags) in enumerate(time_blocks):
-        duration = (end - start).total_seconds() / 3600  # duration in hours
-        ax.barh(i, duration, left=mdates.date2num(start), height=0.5, align='center', 
-                color='skyblue', edgecolor='navy')
-        ax.text(mdates.date2num(start) + duration/2, i, ', '.join(tags), 
-                ha='center', va='center', fontweight='bold')
-
-    ax.set_yticks(range(len(time_blocks)))
-    ax.set_yticklabels([f"Block {i+1}" for i in range(len(time_blocks))])
-    ax.xaxis_date()
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
-    
-    plt.title("TimeWarrior Data for Today")
-    plt.xlabel("Time")
-    plt.ylabel("Time Blocks")
-    plt.tight_layout()
-    plt.show()
+def format_time_blocks(time_blocks):
+    """Format time blocks for display."""
+    output = []
+    for i, (start, end, tags) in enumerate(time_blocks, 1):
+        duration = end - start
+        hours, remainder = divmod(duration.total_seconds(), 3600)
+        minutes, _ = divmod(remainder, 60)
+        output.append(f"Block {i}:")
+        output.append(f"  Start: {start.strftime('%H:%M:%S')}")
+        output.append(f"  End: {end.strftime('%H:%M:%S')}")
+        output.append(f"  Duration: {int(hours):02d}:{int(minutes):02d}")
+        output.append(f"  Tags: {', '.join(tags)}")
+        output.append("")
+    return "\n".join(output)
 
 def main():
     data = get_timewarrior_data()
     time_blocks = parse_timewarrior_data(data)
-    plot_time_blocks(time_blocks)
+    formatted_output = format_time_blocks(time_blocks)
+    print(formatted_output)
 
 if __name__ == "__main__":
     main()
