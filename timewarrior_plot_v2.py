@@ -90,7 +90,7 @@ def format_time_blocks(time_blocks):
             tag_blocks[tag] = []
         tag_blocks[tag].append((start_index, end_index))
 
-    total_width = 24 * (blocks_per_hour // 12) + 6  # Adjust width based on blocks per hour
+    total_width = 24 * BLOCKS_PER_MINUTE + 6  # Adjust width based on blocks per minute
     output.append("┌" + "─" * (total_width - 2) + "┐")
     for hour in range(24):
         text_line = f"│{hour:02d}:00"
