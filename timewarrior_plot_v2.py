@@ -5,10 +5,18 @@ import json
 from datetime import datetime, date, timezone, timedelta
 import random
 import sys
+import argparse
 
 # Define tag priority lists
 LOW_PRIORITY_TAGS = ['obj', 'obj2', 'obj3', 'prof', 'ai', 'ai3']
 HIGH_PRIORITY_TAGS = ['break']
+
+# Parse command-line arguments
+parser = argparse.ArgumentParser(description='Generate a visual representation of TimeWarrior data.')
+parser.add_argument('--blocks-per-minute', type=int, default=4, help='Number of blocks to represent each minute (default: 4)')
+args = parser.parse_args()
+
+BLOCKS_PER_MINUTE = args.blocks_per_minute
 
 def prioritize_tags(tags):
     """Prioritize tags based on predefined lists."""
@@ -61,7 +69,8 @@ def get_color(tag):
 def format_time_blocks(time_blocks):
     """Format time blocks for display with a visual representation."""
     output = []
-    hours = {i: [(" ", None, None) for _ in range(120)] for i in range(24)}  # 120 for 30-minute blocks
+    blocks_per_hour = 60 * BLOCKS_PER_MINUTE
+    hours = {i: [(" ", None, None) for _ in range(blocks_per_hour)] for i in range(24)}
     colors = {}
     tag_blocks = {}
 
@@ -70,29 +79,29 @@ def format_time_blocks(time_blocks):
         colors[tags[0] if tags else "default"] = bg_color
         tag = tags[0] if tags else "default"
         
-        start_index = start.hour * 120 + start.minute * 2
-        end_index = end.hour * 120 + end.minute * 2
+        start_index = start.hour * blocks_per_hour + start.minute * BLOCKS_PER_MINUTE
+        end_index = end.hour * blocks_per_hour + end.minute * BLOCKS_PER_MINUTE
 
         for i in range(start_index, end_index):
-            hour = i // 120
-            hours[hour][i % 120] = ("█", bg_color, tag)
+            hour = i // blocks_per_hour
+            hours[hour][i % blocks_per_hour] = ("█", bg_color, tag)
         
         if tag not in tag_blocks:
             tag_blocks[tag] = []
         tag_blocks[tag].append((start_index, end_index))
 
-    total_width = 126  # 24 hours * 5 characters per hour + 6 for borders
+    total_width = 24 * (blocks_per_hour // 12) + 6  # Adjust width based on blocks per hour
     output.append("┌" + "─" * (total_width - 2) + "┐")
     for hour in range(24):
         text_line = f"│{hour:02d}:00"
         block_line = "│    "
         i = 0
-        while i < 120:
+        while i < blocks_per_hour:
             char, bg_color, tag = hours[hour][i]
             if bg_color:
                 # Find the end of this block
                 end = i
-                while end < 120 and hours[hour][end][1] == bg_color:
+                while end < blocks_per_hour and hours[hour][end][1] == bg_color:
                     end += 1
                 block_width = end - i
                 
@@ -100,7 +109,7 @@ def format_time_blocks(time_blocks):
                 block_line += f"{bg_color}{'█' * block_width}\033[0m"
                 
                 # Check if we should add the tag text
-                hour_start = hour * 120
+                hour_start = hour * blocks_per_hour
                 for start, end in tag_blocks[tag]:
                     if start <= hour_start + i < end:
                         text_to_add = tag[:block_width].center(block_width)

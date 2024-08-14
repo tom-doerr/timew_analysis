@@ -21,14 +21,24 @@ This project provides a visual representation of TimeWarrior data, displaying ti
 2. Run the script:
 
    ```
-   python3 timewarrior_plot_v2.py
+   python3 timewarrior_plot_v2.py [--blocks-per-minute BLOCKS]
    ```
+
+   The `--blocks-per-minute` argument is optional and defaults to 4. It determines the number of blocks used to represent each minute in the visualization.
 
 3. The script will execute the TimeWarrior export command, parse the data, and display the visualization in your terminal.
 
 ## Customization
 
 You can customize the tag prioritization by modifying the `LOW_PRIORITY_TAGS` and `HIGH_PRIORITY_TAGS` lists at the beginning of the script.
+
+You can also adjust the granularity of the time blocks by using the `--blocks-per-minute` argument when running the script. For example:
+
+```
+python3 timewarrior_plot_v2.py --blocks-per-minute 2
+```
+
+This will use 2 blocks to represent each minute, resulting in a less detailed but more compact visualization.
 
 ## Output
 
