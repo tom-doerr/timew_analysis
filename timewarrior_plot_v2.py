@@ -62,9 +62,10 @@ def parse_timewarrior_data(data):
     return time_blocks
 
 def get_color(tag):
-    """Generate a consistent color for a given tag."""
-    random.seed(tag)
-    return f"\033[38;5;{random.randint(1, 255)}m"
+    """Generate a consistent color for a given tag using a simple hash function."""
+    hash_value = sum(ord(char) for char in tag)
+    color_code = hash_value % 255 + 1  # Ensure we don't get 0 (which is black)
+    return f"\033[38;5;{color_code}m"
 
 def format_time_blocks(time_blocks):
     """Format time blocks for display with a visual representation."""
