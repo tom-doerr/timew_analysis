@@ -92,6 +92,14 @@ def format_time_blocks(time_blocks):
         tag_blocks[tag].append((start_index, end_index))
 
     total_width = 24 * BLOCKS_PER_MINUTE + 6  # Adjust width based on blocks per minute
+
+    # Add legend
+    output.append("Legend:")
+    for tag, bg_color in colors.items():
+        output.append(f"{bg_color}{tag.center(10)}\033[0m {tag}")
+        output.append(f"{bg_color}{'█' * 10}\033[0m")
+    output.append("")  # Add an empty line for separation
+
     output.append("┌" + "─" * (total_width - 2) + "┐")
     for hour in range(24):
         text_line = f"│{hour:02d}:00"
@@ -130,12 +138,6 @@ def format_time_blocks(time_blocks):
         output.append(text_line)
         output.append(block_line)
     output.append("└" + "─" * (total_width - 2) + "┘")
-
-    # Add legend
-    output.append("\nLegend:")
-    for tag, bg_color in colors.items():
-        output.append(f"{bg_color}{tag.center(10)}\033[0m {tag}")
-        output.append(f"{bg_color}{'█' * 10}\033[0m")
 
     # Add timestamp
     output.append(f"\nReport generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
